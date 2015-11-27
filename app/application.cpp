@@ -10,26 +10,28 @@
 Timer procTimer;
 Timer buttonTimer;
 Timer timeTimer;
-Timer delayTimer;
+Timer pubTimer;
 
 NtpClient *ntpC;
-HttpClient webReq;
-MqttClient *mqtt;
+//MqttClient *mqtt;
 
 bool state = true;
 bool otaInt = false;
 bool otaPress = false;
 int otaCount=0;
 uint8_t errorCode;
-double timeZ=0.0;
+double timeZ=100.0;
+char mqttClientID[15];
 
 rBootHttpUpdate* otaUpdater = 0;
 
 void blink(void);
 void OtaUpdate(void);
 void updateTime(void);
-void geoRecv(HttpClient& , bool );
-void geoSend(void);
+void mqttMessageRecv(String,String);
+
+MqttClient mqtt("pi-hub",1883,mqttMessageRecv);
+
 
 void IRAM_ATTR otaInterruptHandler()
 {
@@ -136,67 +138,52 @@ void ntpUpdate(NtpClient& client, time_t timestamp)
 
 }
 
-void geoRecv(HttpClient& client, bool successful)
+void mqttMessageRecv(String topic, String message)
 {
-	if(!successful)
+	char buffer[20];
+
+	topic.toCharArray(buffer,20,0);
+	debugf("Topic: %s",buffer);
+
+	message.toCharArray(buffer,20,0);
+	debugf("Message: %s",buffer);
+	double mTZ=atof(buffer);
+	debugf("TZ: %f\n",mTZ);
+
+	if(mTZ!=timeZ)
 	{
-		debugf("Geo Recv Failed");
-		delayTimer.initializeMs(10000,geoSend).start();
-
-		return;
+		timeZ=mTZ;
+		SystemClock.setTimeZone(timeZ);
+		ntpC->requestTime();
 	}
-	debugf("Geo Recv Success");
-
-	String resp=client.getResponseString();
-	StaticJsonBuffer<1000> jsonBuffer;
-	char buffer[1000];
-	resp.toCharArray(buffer,1000,0);
-	JsonObject& root = jsonBuffer.parseObject(buffer);
-	const char* tz=root["geobytestimezone"];
-	Serial.println(tz);
-
-	if(tz!=null)
-	{
-		int8_t sign = 1;
-		if(tz[0]=='-')
-			sign=-1;
-
-		uint8_t hr=(tz[1]-'0')*10+tz[2]-'0';
-		uint8_t mn=(tz[4]-'0')*10+tz[5]-'0';
-
-		Serial.print("HR ");
-		Serial.println(hr);
-		Serial.print("MN ");
-		Serial.println(mn);
-
-		timeZ=sign*((double)hr+(double)mn/60);
-
-	}
-	else
-		errorCode=ERROR_NO_TZ;
-
-	Serial.println(timeZ);
-
-	SystemClock.setTimeZone(timeZ);
-	ntpC->requestTime();	// Time must get set to update TZ
-
-
 }
 
-void geoSend()
+void startMqtt()
 {
-	delayTimer.stop();
 
-	webReq.reset();
-	webReq.downloadString("http://getcitydetails.geobytes.com/GetCityDetails",geoRecv);
+	debugf("Client ID: %s",mqttClientID);
+	mqtt.connect(mqttClientID);
+	mqtt.subscribe("pi-red/clock/tz");
+
+}
+void kaPub()
+{
+	if (mqtt.getConnectionState() != eTCS_Connected)
+		startMqtt(); // Auto reconnect
+
+	mqtt.publish("pi-hub/clients",mqttClientID);
 }
 void connectOK()
 {
+	errorCode=ERROR_NO_TZ;
 	debugf("Connect OK");
+
+	startMqtt();
+	pubTimer.initializeMs(30000,kaPub).start();
+
 	ntpC=new NtpClient("pool.ntp.org",600);
 	ntpC->requestTime();
 
-	delayTimer.initializeMs(10000,geoSend).start();
 
 }
 
@@ -219,5 +206,6 @@ void init()
 	buttonTimer.initializeMs(50,checkOTA).start();
 	timeTimer.initializeMs(1000,updateTime).start();
 
+	sprintf(mqttClientID,"clock-%lx",system_get_chip_id());
 	WifiStation.waitConnection(connectOK,60,connectFail);
 }
