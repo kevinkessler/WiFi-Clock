@@ -5,30 +5,24 @@
 #Add your source directories here separated by space
 MODULES = app
 
-## ESP_HOME sets the path where ESP tools and SDK are located.
-## Windows:
-# ESP_HOME = c:/Espressif
+ifeq ($(OS),Windows_NT)
+	ESP_HOME=c:/Espressif
+	SMING_HOME=D:/ESP8266/Sming/Sming
+	COM_PORT = COM10
+	ESPTOOL2=D:/ESP8266/Tools/esptool2.exe
+else
+	ESP_HOME = /esptools/esp-open-sdk-1.3
+	SMING_HOME = /esptools/Sming/Sming
+	COM_PORT = /dev/tty.SLAB_USBtoUART
+	ESPTOOL2 = /esptools/esp8266/esptool2/esptool2
+endif
 
-## MacOS / Linux:
-ESP_HOME = /esptools/esp-open-sdk-1.3
-
-## SMING_HOME sets the path where Sming framework is located.
-## Windows:
-# SMING_HOME = c:/tools/sming/Sming 
-
-# MacOS / Linux
-SMING_HOME = /esptools/Sming/Sming
-
-## COM port parameter is reqruied to flash firmware correctly.
-## Windows: 
-# COM_PORT = COM3
-
-# MacOS / Linux:
-COM_PORT = /dev/tty.SLAB_USBtoUART
+#
 
 # Com port speed
 COM_SPEED	= 115200
-ESPTOOL2 = /esptools/esp8266/esptool2/esptool2
+#
+
 
 DISABLE_SPIFFS=1
 SPI_SIZE=1M
