@@ -33,6 +33,7 @@ RBOOT_ROM_0     = rom0
 RBOOT_LD_0      = rom0.ld
 ## these next options only needed when using two rom mode
 RBOOT_ROM_1     = rom1
+RBOOT_LD_1		= rom1.ld
 TERMINAL = true
 KILL_TERM= true
 

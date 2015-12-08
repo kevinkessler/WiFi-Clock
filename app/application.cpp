@@ -2,6 +2,10 @@
 #include <SmingCore/SmingCore.h>
 #include <rboot/rboot.h>
 
+#include <Libraries/TFT_ILI9163C/TFT_ILI9163C.h>
+#include <Libraries/RF24/nRF24L01.h>
+#include <Libraries/RF24/RF24.h>
+
 #define LED_PIN 4
 #define OTA_BUTTON 0
 
@@ -13,7 +17,7 @@ Timer timeTimer;
 Timer pubTimer;
 
 NtpClient *ntpC;
-//MqttClient *mqtt;
+
 
 bool state = true;
 bool otaInt = false;
@@ -31,7 +35,45 @@ void updateTime(void);
 void mqttMessageRecv(String,String);
 
 MqttClient mqtt("pi-hub",1883,mqttMessageRecv);
+RF24 radio(4, 5);
+Timer rfTimer;
+const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
+//const uint64_t pipes[2] = { 0xF0F0F0F0D2LL, 0xF0F0F0F0E1LL};
 
+void loopListen()
+{
+    // if there is data ready
+    if (radio.available())
+    {
+      // Dump the payloads until we've gotten everything
+      unsigned long got_time;
+      bool done = false;
+      while (!done)
+      {
+        // Fetch the payload, and see if this was the last one.
+        done = radio.read( &got_time, sizeof(unsigned long) );
+
+        // Spew it
+        Serial.printf("Got payload %lu...\n",got_time);
+
+        // Forward this data packet to UDP/HTTP/MQTT here.
+
+        delay(5);
+      }
+
+      // First, stop listening so we can talk
+      radio.stopListening();
+
+      // Send the final one back.
+      radio.write( &got_time, sizeof(unsigned long) );
+      Serial.println("Sent response.");
+
+      // Now, resume listening so we catch the next packets.
+      radio.startListening();
+
+
+    }
+}
 
 void IRAM_ATTR otaInterruptHandler()
 {
@@ -196,16 +238,51 @@ void init()
 {
 	Serial.begin(SERIAL_BAUD_RATE);
 	Serial.systemDebugOutput(true);
-	debugf("WiFi Clock Beginning");
+	debugf("WiFi Clock Beginning nRF Version");
 
 	pinMode(OTA_BUTTON,INPUT);
 	attachInterrupt(otaPress,otaInterruptHandler,CHANGE);
 
-	pinMode(LED_PIN, OUTPUT);
-	procTimer.initializeMs(500, blink).start();
+//	pinMode(LED_PIN, OUTPUT);
+	//procTimer.initializeMs(500, blink).start();
 	buttonTimer.initializeMs(50,checkOTA).start();
 	timeTimer.initializeMs(1000,updateTime).start();
 
 	sprintf(mqttClientID,"clock-%lx",system_get_chip_id());
 	WifiStation.waitConnection(connectOK,60,connectFail);
+
+	radio.begin();
+	radio.setChannel(0x40);
+	// optionally, increase the delay between retries & # of retries
+	radio.setRetries(15,15);
+
+	// optionally, reduce the payload size.  seems to
+	// improve reliability
+	radio.setPayloadSize(8);
+
+	//
+	// Open pipes to other nodes for communication
+	//
+
+	// This simple sketch opens two pipes for these two nodes to communicate
+	// back and forth.
+	// Open 'our' pipe for writing
+	// Open the 'other' pipe for reading, in position #1 (we can have up to 5 pipes open for reading)
+	// In this case we will pong back (because we are the server)
+	radio.openWritingPipe(pipes[1]);
+	radio.openReadingPipe(1,pipes[0]);
+
+	//
+	// Start listening
+	//
+	radio.startListening();
+
+	//
+	// Dump the configuration of the rf unit for debugging
+	//
+	radio.printDetails();
+	Serial.println("Initialization completed.");
+
+	rfTimer.initializeMs(10, loopListen).start();
+
 }
