@@ -43,36 +43,37 @@ const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
 void loopListen()
 {
     // if there is data ready
-    if (radio.available())
-    {
+//    if (radio.available())
+//    {
       // Dump the payloads until we've gotten everything
-      unsigned long got_time;
-      bool done = false;
-      while (!done)
-      {
+//      unsigned long got_time;
+//      bool done = false;
+//      while (!done)
+//      {
         // Fetch the payload, and see if this was the last one.
-        done = radio.read( &got_time, sizeof(unsigned long) );
+//        done = radio.read( &got_time, sizeof(unsigned long) );
 
         // Spew it
-        Serial.printf("Got payload %lu...\n",got_time);
+//        Serial.printf("Got payload %lu...\n",got_time);
 
         // Forward this data packet to UDP/HTTP/MQTT here.
 
-        delay(5);
-      }
+//        delay(5);
+//      }
 
       // First, stop listening so we can talk
-      radio.stopListening();
+//      radio.stopListening();
 
       // Send the final one back.
+	  uint16_t got_time=0x0f0f;
       radio.write( &got_time, sizeof(unsigned long) );
       Serial.println("Sent response.");
 
       // Now, resume listening so we catch the next packets.
-      radio.startListening();
+//      radio.startListening();
 
 
-    }
+//    }
 }
 
 void IRAM_ATTR otaInterruptHandler()
@@ -143,11 +144,13 @@ void OtaUpdate() {
 	slot = bootconf.current_rom;
 	if (slot == 0) slot = 1; else slot = 0;
 
-	if (slot == 0) {
-		otaUpdater->addItem(bootconf.roms[slot], ROM_0_URL);
-	} else {
-		otaUpdater->addItem(bootconf.roms[slot], ROM_1_URL);
-	}
+	otaUpdater->addItem(bootconf.roms[slot], ROM_0_URL);
+
+//	if (slot == 0) {
+//		otaUpdater->addItem(bootconf.roms[slot], ROM_0_URL);
+//	} else {
+//		otaUpdater->addItem(bootconf.roms[slot], ROM_1_URL);
+//	}
 
 	otaUpdater->setCallback(OtaUpdate_CallBack);
 
@@ -238,7 +241,7 @@ void init()
 {
 	Serial.begin(SERIAL_BAUD_RATE);
 	Serial.systemDebugOutput(true);
-	debugf("WiFi Clock Beginning nRF Version");
+	debugf("WiFi Clock Beginning Version 3.2");
 
 	pinMode(OTA_BUTTON,INPUT);
 	attachInterrupt(otaPress,otaInterruptHandler,CHANGE);
@@ -270,12 +273,12 @@ void init()
 	// Open the 'other' pipe for reading, in position #1 (we can have up to 5 pipes open for reading)
 	// In this case we will pong back (because we are the server)
 	radio.openWritingPipe(pipes[1]);
-	radio.openReadingPipe(1,pipes[0]);
+	//radio.openReadingPipe(1,pipes[0]);
 
 	//
 	// Start listening
 	//
-	radio.startListening();
+	//radio.startListening();
 
 	//
 	// Dump the configuration of the rf unit for debugging
@@ -283,6 +286,6 @@ void init()
 	radio.printDetails();
 	Serial.println("Initialization completed.");
 
-	rfTimer.initializeMs(10, loopListen).start();
+	//rfTimer.initializeMs(1000, loopListen).start();
 
 }

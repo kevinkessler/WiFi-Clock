@@ -25,15 +25,15 @@ COM_SPEED	= 115200
 
 
 DISABLE_SPIFFS=1
-SPI_SIZE=1M
+SPI_SIZE=4M
 RBOOT_ENABLED=1
-RBOOT_TWO_ROMS  = 1
+RBOOT_TWO_ROMS  = 0
 RBOOT_ROM_0     = rom0
 ## input linker file for first rom
 RBOOT_LD_0      = rom0.ld
 ## these next options only needed when using two rom mode
-RBOOT_ROM_1     = rom1
-RBOOT_LD_1		= rom1.ld
+# RBOOT_ROM_1     = rom1
+# RBOOT_LD_1		= rom1.ld
 TERMINAL = true
 KILL_TERM= true
 
