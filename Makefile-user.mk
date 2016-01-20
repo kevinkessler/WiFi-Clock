@@ -8,7 +8,7 @@ MODULES = app
 ifeq ($(OS),Windows_NT)
 	ESP_HOME=c:/Espressif
 	SMING_HOME=D:/ESP8266/Sming/Sming
-	COM_PORT = COM10
+	COM_PORT = COM4
 	ESPTOOL2=D:/ESP8266/Tools/esptool2.exe
 else
 	ESP_HOME = /esptools/esp-open-sdk-1.3
