@@ -2,6 +2,7 @@
 #include <SmingCore/SmingCore.h>
 #include <rboot/rboot.h>
 #include <application.h>
+#include "KMKMqttClient.h"
 
 Timer blinkTimer;
 Timer buttonTimer;
@@ -16,7 +17,7 @@ uint8_t errorCode;
 double timeZ=100.0;
 char mqttClientID[15];
 
-MqttClient mqtt("pi-hub.home",1883,mqttMessageRecv);
+KMKMqttClient mqtt("pi-hub.home",1883,mqttMessageRecv);
 extern void pushChar(uint8_t, bool );
 extern void latchLED(void);
 
@@ -28,17 +29,10 @@ void updateTime()
 
 
 	uint32_t remaining=(60-dt.Second)*1000-dt.Milliseconds;
-//	uint32_t remaining=1000;
 	timeTimer.setIntervalMs(remaining);
 
 	displayTime();
 
-//	pushChar(8,true);
-//	pushChar(8,true);
-//	pushChar(8,true);
-//	pushChar(8,true);
-
-//	latchLED();
 }
 
 void blink()
@@ -80,7 +74,7 @@ void startMqtt()
 
 	debugf("Client ID: %s",mqttClientID);
 	mqtt.connect(mqttClientID);
-	mqtt.subscribe("pi-red/clock/tz");
+	mqtt.subscribe(TZ_TOPIC);
 
 }
 void kaPub()
@@ -112,7 +106,7 @@ void init()
 {
 	Serial.begin(SERIAL_BAUD_RATE);
 	Serial.systemDebugOutput(true);
-	debugf("WiFi Clock Beginning Version 3.3");
+	debugf("WiFi Clock Beginning Version 3.8");
 
 	displayInit();
 	pinMode(OTA_BUTTON,INPUT);
@@ -124,6 +118,7 @@ void init()
 	timeTimer.initializeMs(1000,updateTime).start();
 
 	sprintf(mqttClientID,"clock-%lx",system_get_chip_id());
+	WifiAccessPoint.enable(false);
 	WifiStation.enable(true);
 	WifiStation.config("***REMOVED***","***REMOVED***");
 	WifiStation.waitConnection(connectOK,60,connectFail);

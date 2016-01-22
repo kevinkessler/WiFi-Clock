@@ -45,6 +45,11 @@ void checkOTA()
 	if(otaCount>100)
 	{
 		blinkTimer.initializeMs(100, blink).start();
+		mqtt.disconnect();
+		timeTimer.stop();
+		pubTimer.stop();
+		buttonTimer.stop();
+
 		OtaUpdate();
 		otaCount=0;
 	}

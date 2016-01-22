@@ -55,7 +55,7 @@ void displayTime()
 		hour_tens=BLANK;
 
 	pushChar(min_ones,pm);
-	pushChar(min_tens,am);
+	pushChar(min_tens,false);
 	pushChar(hour_ones,true);
 	pushChar(hour_tens,false);
 
