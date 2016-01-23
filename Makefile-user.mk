@@ -11,7 +11,7 @@ ifeq ($(OS),Windows_NT)
 	COM_PORT = COM4
 	ESPTOOL2=D:/ESP8266/Tools/esptool2.exe
 else
-	ESP_HOME = /esptools/esp-open-sdk-1.3
+	ESP_HOME = /esptools/esp-open-sdk
 	SMING_HOME = /esptools/Sming/Sming
 	COM_PORT = /dev/tty.SLAB_USBtoUART
 	ESPTOOL2 = /esptools/esp8266/esptool2/esptool2

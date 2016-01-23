@@ -30,19 +30,18 @@ void checkOTA()
 		otaPress=!digitalRead(OTA_BUTTON);
 	}
 
-	if(otaPress)
+	if((otaPress)&&(!digitalRead(OTA_BUTTON)))
 	{
-		if(!digitalRead(OTA_BUTTON))
-		{
-			otaCount++;
-		}
-		else
-		{
-			otaCount=0;
-			otaPress=0;
-		}
+
+		otaCount++;
 	}
-	if(otaCount>100)
+	else
+	{
+		otaCount=0;
+		otaPress=0;
+	}
+
+	if(otaCount>60)
 	{
 		blinkTimer.initializeMs(100, blink).start();
 		mqtt.disconnect();
