@@ -106,7 +106,7 @@ void init()
 {
 	Serial.begin(SERIAL_BAUD_RATE);
 	Serial.systemDebugOutput(true);
-	debugf("WiFi Clock Beginning Version 3.8");
+	debugf("WiFi Clock Beginning Version 3.9");
 
 	displayInit();
 	pinMode(OTA_BUTTON,INPUT);
