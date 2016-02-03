@@ -60,5 +60,5 @@ uint16_t bright_level[] = {
 
 void pushChar(uint8_t, bool );
 void latchLED(void);
-
+void displayNumber(uint16_t);
 #endif /* INCLUDE_DISPLAY_H_ */

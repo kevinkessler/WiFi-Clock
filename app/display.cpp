@@ -9,31 +9,39 @@
 #include <SmingCore/SmingCore.h>
 #include <application.h>
 #include <display.h>
-#include <SmingCore/HardwarePWM.h>
 
-//uint8_t pins[1]={PWM_GPIO};
-//HardwarePWM HWpwm(pins,1);
+uint8_t pins[1]={PWM_GPIO};
+HardwarePWM HWpwm(pins,1);
 
-#define PWM_0_OUT_IO_MUX PERIPHS_IO_MUX_MTDO_U
-#define PWM_0_OUT_IO_NUM 15
-#define PWM_0_OUT_IO_FUNC  FUNC_GPIO15
-#define PWM_PERIOD 1000
+
 Timer dimTimer;
 
 uint16_t dim=0;
 
-void setBrightness()
+
+uint16_t b=0;
+
+void IRAM_ATTR setBrightness()
 {
-	uint16_t bright=0xffff & system_adc_read();
+	b+=5000;
+	if (b>21000)
+		b=0;
+	HWpwm.analogWrite(PWM_GPIO,b);
 
-	dim+=1000;
-	if(dim > 60000)
-		dim=0;
+	uint32_t total=0;
+	uint8_t n;
+	uint16_t adc;
+	for(n=0;n<16;n++)
+	{
+		adc=system_adc_read();
+		total+=adc;
+	}
+	adc=total/16;
 
-//	HWpwm.setDuty(PWM_GPIO,dim);
-	pwm_set_duty(dim,0);
-	pwm_start();
-	debugf("ADC %d %d",bright,dim);
+
+	debugf("ADC %d",adc);
+	displayNumber(adc);
+
 }
 
 void displayInit()
@@ -41,29 +49,31 @@ void displayInit()
 	pinMode(SCK_GPIO,OUTPUT);
 	pinMode(RCK_GPIO,OUTPUT);
 	pinMode(SI_GPIO,OUTPUT);
-//	pinMode(PWM_GPIO,OUTPUT);
+	pinMode(PWM_GPIO,OUTPUT);
 
 	digitalWrite(SCK_GPIO,0);
 	digitalWrite(RCK_GPIO,0);
 
-	// do pwm init here
-	//HWpwm.setPeriod(500);
-//	HWpwm.analogWrite(PWM_GPIO,44440);
-//	digitalWrite(PWM_GPIO,1);
 
-
-	uint32 io_info[][3] = {
-			{PWM_0_OUT_IO_MUX,PWM_0_OUT_IO_FUNC,PWM_0_OUT_IO_NUM}
-	};
-
-	uint32 pwm_duty_init[1] ={11111};
-
-	pwm_init(PWM_PERIOD,pwm_duty_init,1,io_info);
-	pwm_start();
-
+	HWpwm.analogWrite(PWM_GPIO,11111);
 	dimTimer.initializeMs(1000,setBrightness).start();
+
 }
 
+void displayNumber(uint16_t num)
+{
+	uint16_t val=num;
+	uint8_t n;
+
+	for (n=0;n<4;n++)
+	{
+		uint16_t tmp=val;
+		val/=10;
+		uint8_t dig=tmp-(val*10);
+		pushChar(dig,false);
+	}
+	latchLED();
+}
 void displayTime()
 {
 	DateTime dt=SystemClock.now();
