@@ -12,36 +12,57 @@
 
 uint8_t pins[1]={PWM_GPIO};
 HardwarePWM HWpwm(pins,1);
-
-
 Timer dimTimer;
 
-uint16_t dim=0;
-
-
-uint16_t b=0;
+bool setBright=true;
+bool displayADC=false;
 
 void IRAM_ATTR setBrightness()
 {
-	b+=5000;
-	if (b>21000)
-		b=0;
-	HWpwm.analogWrite(PWM_GPIO,b);
+		uint32_t total=0;
+		uint8_t n;
+		uint16_t adc;
+		for(n=0;n<16;n++)
+		{
+			adc=system_adc_read();
+			total+=adc;
+		}
+		adc=total/16;
 
-	uint32_t total=0;
-	uint8_t n;
-	uint16_t adc;
-	for(n=0;n<16;n++)
+	if(setBright)
 	{
-		adc=system_adc_read();
-		total+=adc;
+
+		for(n=0;n<4;n++)
+			if(adc>light_level[n])
+				break;
+
+		HWpwm.analogWrite(PWM_GPIO,bright_level[n]);
 	}
-	adc=total/16;
 
+	if(displayADC)
+		displayNumber(adc);
 
-	debugf("ADC %d",adc);
-	displayNumber(adc);
+}
 
+void manualBright(int level)
+{
+	if(level<0)
+	{
+		setBright=true;
+	}
+	else
+	{
+		setBright=false;
+		HWpwm.analogWrite(PWM_GPIO,level);
+	}
+}
+
+void showADC(int dis)
+{
+	if(dis==0)
+		displayADC=false;
+	else
+		displayADC=true;
 }
 
 void displayInit()
