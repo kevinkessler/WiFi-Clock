@@ -2,7 +2,6 @@
 #include <SmingCore/SmingCore.h>
 #include <rboot/rboot.h>
 #include <application.h>
-#include "KMKMqttClient.h"
 
 Timer blinkTimer;
 Timer buttonTimer;
@@ -14,12 +13,8 @@ NtpClient *ntpC;
 
 bool state = true;
 uint8_t errorCode;
-double timeZ=100.0;
-char mqttClientID[15];
 
-KMKMqttClient mqtt("pi-hub.home",1883,mqttMessageRecv);
-extern void pushChar(uint8_t, bool );
-extern void latchLED(void);
+extern char mqttClientID[15];
 
 void updateTime()
 {
@@ -49,41 +44,6 @@ void ntpUpdate(NtpClient& client, time_t timestamp)
 
 }
 
-void mqttMessageRecv(String topic, String message)
-{
-	char buffer[20];
-
-	topic.toCharArray(buffer,20,0);
-	debugf("Topic: %s",buffer);
-
-	message.toCharArray(buffer,20,0);
-	debugf("Message: %s",buffer);
-	double mTZ=atof(buffer);
-	debugf("TZ: %f\n",mTZ);
-
-	if(mTZ!=timeZ)
-	{
-		timeZ=mTZ;
-		SystemClock.setTimeZone(timeZ);
-		ntpC->requestTime();
-	}
-}
-
-void startMqtt()
-{
-
-	debugf("Client ID: %s",mqttClientID);
-	mqtt.connect(mqttClientID);
-	mqtt.subscribe(TZ_TOPIC);
-
-}
-void kaPub()
-{
-	if (mqtt.getConnectionState() != eTCS_Connected)
-		startMqtt(); // Auto reconnect
-
-	mqtt.publish("pi-hub/clients",mqttClientID);
-}
 void connectOK()
 {
 	errorCode=ERROR_NO_TZ;

@@ -52,10 +52,10 @@ uint16_t light_level[] = {
 };
 
 uint16_t bright_level[] = {
-		0,
-		5555,
+		16666,
 		11111,
-		16666
+		5555,
+		1000
 };
 
 void pushChar(uint8_t, bool );
