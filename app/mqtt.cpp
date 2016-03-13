@@ -7,11 +7,13 @@
 #include <SmingCore/SmingCore.h>
 #include "KMKMqttClient.h"
 #include "mqtt.h"
+#include "display.h"
 
 double timeZ=100.0;
 char mqttClientID[15];
 
 KMKMqttClient mqtt("pi-hub.home",1883,mqttMessageRecv);
+extern ClockDisplay led_display;
 
 bool prefix(const char *pre, const char *str)
 {
@@ -43,13 +45,13 @@ void mqttMessageRecv(String topic, String message)
 	{
 		int level=atoi(buffer+4);
 		debugf("DIM: %d",level);
-		manualBright(level);
+		led_display.manualBright(level);
 	}
 	else if(prefix("ADC:",buffer))
 	{
 		int d=atoi(buffer+4);
 		debugf("ADC: %d",d);
-		showADC(d);
+		led_display.showADC(d);
 	}
 }
 

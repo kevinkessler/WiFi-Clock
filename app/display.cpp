@@ -10,14 +10,46 @@
 #include <application.h>
 #include <display.h>
 
+
+uint8_t character[] = {	0b10000001, /* 0 */
+						0b11001111, /* 1 */
+						0b10010010, /* 2 */
+						0b10000110, /* 3 */
+						0b11001100, /* 4 */
+						0b10100100, /* 5 */
+						0b10100000, /* 6 */
+						0b10001111, /* 7 */
+						0b10000000, /* 8 */
+						0b10001100, /* 9 */
+						0b10110000, /* E */
+						0b10111000, /* F */
+						0b11001000, /* H */
+						0b11110001, /* L */
+						0b10011001, /* R */
+						0b10100100, /* S */
+						0b11111111  /* Blank */
+
+};
+
+
+
+uint16_t light_level[] = {
+		0x300,
+		0x200,
+		0x100,
+		0
+};
+
+uint16_t bright_level[] = {
+		16666,
+		5000,
+		1000,
+		300
+};
+
 uint8_t pins[1]={PWM_GPIO};
-HardwarePWM HWpwm(pins,1);
-Timer dimTimer;
 
-bool setBright=true;
-bool displayADC=false;
-
-void IRAM_ATTR setBrightness()
+void ClockDisplay::setBrightness()
 {
 		uint32_t total=0;
 		uint8_t n;
@@ -36,7 +68,14 @@ void IRAM_ATTR setBrightness()
 			if(adc>light_level[n])
 				break;
 
-		HWpwm.analogWrite(PWM_GPIO,bright_level[n]);
+		HWpwm->analogWrite(PWM_GPIO,bright_level[n]);
+		if(flash)
+		{
+			if(blink)
+				HWpwm->analogWrite(PWM_GPIO,0);
+
+			blink=!blink;
+		}
 	}
 
 	if(displayADC)
@@ -44,29 +83,9 @@ void IRAM_ATTR setBrightness()
 
 }
 
-void manualBright(int level)
+ClockDisplay::ClockDisplay()
 {
-	if(level<0)
-	{
-		setBright=true;
-	}
-	else
-	{
-		setBright=false;
-		HWpwm.analogWrite(PWM_GPIO,level);
-	}
-}
 
-void showADC(int dis)
-{
-	if(dis==0)
-		displayADC=false;
-	else
-		displayADC=true;
-}
-
-void displayInit()
-{
 	pinMode(SCK_GPIO,OUTPUT);
 	pinMode(RCK_GPIO,OUTPUT);
 	pinMode(SI_GPIO,OUTPUT);
@@ -75,13 +94,49 @@ void displayInit()
 	digitalWrite(SCK_GPIO,0);
 	digitalWrite(RCK_GPIO,0);
 
+	HWpwm=new HardwarePWM(pins,1);
+	HWpwm->analogWrite(PWM_GPIO,11111);
 
-	HWpwm.analogWrite(PWM_GPIO,11111);
-	dimTimer.initializeMs(1000,setBrightness).start();
+	//dimTimer=new Timer();
+	dimTimer.initializeMs(1000,TimerDelegate(&ClockDisplay::setBrightness,this)).start();
+	//dimTimer->start();
 
 }
 
-void displayNumber(uint16_t num)
+
+
+void ClockDisplay::manualBright(int level)
+{
+	if(level<0)
+	{
+		setBright=true;
+	}
+	else
+	{
+		setBright=false;
+		HWpwm->analogWrite(PWM_GPIO,level);
+	}
+}
+
+void ClockDisplay::showADC(int dis)
+{
+	if(dis==0)
+		displayADC=false;
+	else
+		displayADC=true;
+}
+
+void ClockDisplay::showFlash()
+{
+	pushChar(H_CHAR,false);
+	pushChar(S_CHAR,false);
+	pushChar(L_CHAR,false);
+	pushChar(F_CHAR,false);
+
+	latchLED();
+}
+
+void ClockDisplay::displayNumber(uint16_t num)
 {
 	uint16_t val=num;
 	uint8_t n;
@@ -95,8 +150,11 @@ void displayNumber(uint16_t num)
 	}
 	latchLED();
 }
-void displayTime()
+void ClockDisplay::displayTime()
 {
+	if(flash)
+		return;
+
 	DateTime dt=SystemClock.now();
 
 
@@ -135,7 +193,7 @@ void displayTime()
 
 }
 
-void setDisplayLevel()
+void ClockDisplay::setDisplayLevel()
 {
 
 
@@ -160,7 +218,7 @@ void setDisplayLevel()
 
 }
 
-void pushChar(uint8_t symbol, bool dp)
+void ClockDisplay::pushChar(uint8_t symbol, bool dp)
 {
 	uint8_t n;
 
@@ -200,7 +258,7 @@ void pushChar(uint8_t symbol, bool dp)
 
 }
 
-void latchLED()
+void ClockDisplay::latchLED()
 {
 	digitalWrite(RCK_GPIO,1);
 	digitalWrite(RCK_GPIO,0);

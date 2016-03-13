@@ -16,8 +16,6 @@
 
 #define COMMON_CATHODE 1
 
-
-
 void blink(void);
 void OtaUpdate(void);
 void updateTime(void);
