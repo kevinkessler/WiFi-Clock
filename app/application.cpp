@@ -3,7 +3,10 @@
 #include <rboot/rboot.h>
 #include <application.h>
 #include "display.h"
+#include <Libraries/OneWire/OneWire.h>
+#include <Libraries/DS18S20/ds18s20.h>
 
+DS18S20 ReadTemp;
 ClockDisplay led_display;
 
 Timer blinkTimer;
@@ -36,8 +39,34 @@ void blink()
 {
 	digitalWrite(LED_PIN, state);
 	state = !state;
+
+	readTempData();
 }
 
+void readTempData()
+{
+	if(!ReadTemp.MeasureStatus())
+	{
+		uint8_t tCount;
+		tCount=ReadTemp.GetSensorsCount();
+		debugf("Sensor Count %d",tCount);
+
+		uint64_t id=ReadTemp.GetSensorID(0);
+		debugf("Sensor ID %lx,id");
+
+		if(ReadTemp.IsValidTemperature(0))
+		{
+			double tempC=ReadTemp.GetCelsius(0);
+			debugf("Temp %f C",tempC);
+		}
+		else
+			debugf("No Valid Data");
+
+		ReadTemp.StartMeasure();
+	}
+	else
+		debugf("Invalid Status");
+}
 void ntpUpdate(NtpClient& client, time_t timestamp)
 {
 	debugf("Setting Time");
@@ -62,6 +91,7 @@ void connectOK()
 void connectFail()
 {
 	Serial.println("Connect Fail");
+	WifiStation.enable(false);
 }
 
 void init()
@@ -74,7 +104,8 @@ void init()
 	attachInterrupt(OTA_BUTTON,otaInterruptHandler,CHANGE);
 
 	pinMode(LED_PIN, OUTPUT);
-	blinkTimer.initializeMs(500, blink).start();
+//	blinkTimer.initializeMs(500, blink).start();
+	blinkTimer.initializeMs(2000, blink).start();
 	buttonTimer.initializeMs(50,checkOTA).start();
 	timeTimer.initializeMs(1000,updateTime).start();
 
@@ -83,6 +114,8 @@ void init()
 	WifiStation.enable(true);
 	//WifiStation.config("xxxxxxxx","XXXXXXXXXX");
 	WifiStation.waitConnection(connectOK,60,connectFail);
+	ReadTemp.Init(TEMP_PIN);
+	ReadTemp.StartMeasure();
 
 	Serial.println("Initialization completed.");
 

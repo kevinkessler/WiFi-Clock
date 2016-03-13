@@ -11,6 +11,7 @@
 
 #define LED_PIN 4
 #define OTA_BUTTON 0
+#define TEMP_PIN 5
 
 #define ERROR_NO_TZ 3
 
@@ -19,6 +20,7 @@
 void blink(void);
 void OtaUpdate(void);
 void updateTime(void);
+void readTempData(void);
 
 void checkOTA(void);
 void displayTime(void);
