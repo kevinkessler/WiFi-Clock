@@ -2,6 +2,9 @@
 #include <SmingCore/SmingCore.h>
 #include <rboot/rboot.h>
 #include <application.h>
+#include "display.h"
+
+ClockDisplay led_display;
 
 Timer blinkTimer;
 Timer buttonTimer;
@@ -9,7 +12,6 @@ Timer timeTimer;
 Timer pubTimer;
 
 NtpClient *ntpC;
-
 
 bool state = true;
 uint8_t errorCode;
@@ -26,7 +28,7 @@ void updateTime()
 	uint32_t remaining=(60-dt.Second)*1000-dt.Milliseconds;
 	timeTimer.setIntervalMs(remaining);
 
-	displayTime();
+	led_display.displayTime();
 
 }
 
@@ -40,7 +42,7 @@ void ntpUpdate(NtpClient& client, time_t timestamp)
 {
 	debugf("Setting Time");
 	SystemClock.setTime(timestamp,eTZ_UTC);
-	displayTime();
+	led_display.displayTime();
 
 }
 
@@ -68,7 +70,6 @@ void init()
 	Serial.systemDebugOutput(true);
 	debugf("WiFi Clock Beginning Version 3.9");
 
-	displayInit();
 	pinMode(OTA_BUTTON,INPUT);
 	attachInterrupt(OTA_BUTTON,otaInterruptHandler,CHANGE);
 

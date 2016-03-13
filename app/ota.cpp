@@ -8,12 +8,13 @@
 #include <SmingCore/SmingCore.h>
 #include <ota.h>
 #include <application.h>
+#include "display.h"
 
 bool otaInt = false;
 bool otaPress = false;
 uint8_t otaCount=0;
 rBootHttpUpdate* otaUpdater = 0;
-
+extern ClockDisplay led_display;
 
 void IRAM_ATTR otaInterruptHandler()
 {
@@ -44,6 +45,7 @@ void checkOTA()
 	if(otaCount>60)
 	{
 		blinkTimer.initializeMs(100, blink).start();
+		led_display.showFlash();
 		mqtt.disconnect();
 		timeTimer.stop();
 		pubTimer.stop();

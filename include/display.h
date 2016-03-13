@@ -26,39 +26,36 @@
 #define PWM_0_OUT_IO_FUNC  FUNC_GPIO15
 #define PWM_PERIOD 1000
 
-uint8_t character[] = {	0b10000001, /* 0 */
-						0b11001111, /* 1 */
-						0b10010010, /* 2 */
-						0b10000110, /* 3 */
-						0b11001100, /* 4 */
-						0b10100100, /* 5 */
-						0b10100000, /* 6 */
-						0b10001111, /* 7 */
-						0b10000000, /* 8 */
-						0b10001100, /* 9 */
-						0b10110000, /* E */
-						0b10011001, /* R */
-						0b11111111  /* Blank */
+#define BLANK 16
+#define E_CHAR 10
+#define F_CHAR 11
+#define H_CHAR 12
+#define L_CHAR 13
+#define R_CHAR 14
+#define S_CHAR 15
+
+class ClockDisplay {
+private:
+	HardwarePWM *HWpwm;
+	Timer dimTimer;
+	bool setBright=true;
+	bool displayADC=false;
+	bool flash=false;
+	bool blink=false;
+
+	void pushChar(uint8_t, bool );
+	void latchLED(void);
+	void displayNumber(uint16_t);
+	void setBrightness(void);
+	void setDisplayLevel(void);
+
+public:
+	ClockDisplay(void);
+	void manualBright(int);
+	void showADC(int);
+	void displayTime(void);
+	void showFlash(void);
+
 
 };
-
-#define BLANK 12
-
-uint16_t light_level[] = {
-		0x300,
-		0x200,
-		0x100,
-		0
-};
-
-uint16_t bright_level[] = {
-		16666,
-		11111,
-		5555,
-		1000
-};
-
-void pushChar(uint8_t, bool );
-void latchLED(void);
-void displayNumber(uint16_t);
 #endif /* INCLUDE_DISPLAY_H_ */
