@@ -81,7 +81,7 @@ void init()
 	sprintf(mqttClientID,"clock-%lx",system_get_chip_id());
 	WifiAccessPoint.enable(false);
 	WifiStation.enable(true);
-	WifiStation.config("AstroNet","IHateComputers");
+	//WifiStation.config("xxxxxxxx","XXXXXXXXXX");
 	WifiStation.waitConnection(connectOK,60,connectFail);
 
 	Serial.println("Initialization completed.");
