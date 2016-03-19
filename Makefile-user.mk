@@ -24,7 +24,7 @@ COM_SPEED	= 115200
 #
 
 
-DISABLE_SPIFFS=1
+SPIFF_FILES=web
 SPI_SIZE=4M
 RBOOT_ENABLED=1
 RBOOT_TWO_ROMS  = 0
@@ -39,6 +39,6 @@ KILL_TERM= true
 
 .PHONY: copy flashparam
 copy:
-	scp out/firmware/rom*.bin kevin@raspberrypi2:/var/www
+	scp out/firmware/*.bin kevin@raspberrypi2:/var/www
 flashparam:
 	$(ESPTOOL) -p $(COM_PORT) -b $(COM_SPEED_ESPTOOL) write_flash $(flashimageoptions) 0x3fc000 esp_init_data_adc_33.bin

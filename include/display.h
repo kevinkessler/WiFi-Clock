@@ -42,6 +42,10 @@ private:
 	bool displayADC=false;
 	bool flash=false;
 	bool blink=false;
+	bool toggle=false;
+	uint8_t errCode=0;
+	uint32_t totalADC;
+	uint16_t countADC;
 
 	void pushChar(uint8_t, bool );
 	void latchLED(void);
@@ -55,7 +59,8 @@ public:
 	void showADC(int);
 	void displayTime(void);
 	void showFlash(void);
-
+	void showError(uint8);
+	double adcAve(void);
 
 };
 #endif /* INCLUDE_DISPLAY_H_ */

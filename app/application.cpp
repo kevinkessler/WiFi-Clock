@@ -3,10 +3,10 @@
 #include <rboot/rboot.h>
 #include <application.h>
 #include "display.h"
+#include "Configurator.h"
 #include <Libraries/OneWire/OneWire.h>
 #include <Libraries/DS18S20/ds18s20.h>
 
-DS18S20 ReadTemp;
 ClockDisplay led_display;
 
 Timer blinkTimer;
@@ -15,11 +15,13 @@ Timer timeTimer;
 Timer pubTimer;
 
 NtpClient *ntpC;
+Configurator *config;
 
 bool state = true;
 uint8_t errorCode;
 
-extern char mqttClientID[15];
+//extern char mqttClientID[15];
+extern void enable_web_server(uint8);
 
 void updateTime()
 {
@@ -40,33 +42,8 @@ void blink()
 	digitalWrite(LED_PIN, state);
 	state = !state;
 
-	readTempData();
 }
 
-void readTempData()
-{
-	if(!ReadTemp.MeasureStatus())
-	{
-		uint8_t tCount;
-		tCount=ReadTemp.GetSensorsCount();
-		debugf("Sensor Count %d",tCount);
-
-		uint64_t id=ReadTemp.GetSensorID(0);
-		debugf("Sensor ID %lx,id");
-
-		if(ReadTemp.IsValidTemperature(0))
-		{
-			double tempC=ReadTemp.GetCelsius(0);
-			debugf("Temp %f C",tempC);
-		}
-		else
-			debugf("No Valid Data");
-
-		ReadTemp.StartMeasure();
-	}
-	else
-		debugf("Invalid Status");
-}
 void ntpUpdate(NtpClient& client, time_t timestamp)
 {
 	debugf("Setting Time");
@@ -90,32 +67,30 @@ void connectOK()
 
 void connectFail()
 {
-	Serial.println("Connect Fail");
-	WifiStation.enable(false);
+	debugf("Connect Fail");
+	enable_web_server(1);
 }
 
 void init()
 {
 	Serial.begin(SERIAL_BAUD_RATE);
 	Serial.systemDebugOutput(true);
-	debugf("WiFi Clock Beginning Version 3.9");
+	debugf("WiFi Clock Beginning Version 0.9");
 
 	pinMode(OTA_BUTTON,INPUT);
 	attachInterrupt(OTA_BUTTON,otaInterruptHandler,CHANGE);
 
 	pinMode(LED_PIN, OUTPUT);
-//	blinkTimer.initializeMs(500, blink).start();
-	blinkTimer.initializeMs(2000, blink).start();
+	blinkTimer.initializeMs(500, blink).start();
 	buttonTimer.initializeMs(50,checkOTA).start();
 	timeTimer.initializeMs(1000,updateTime).start();
 
-	sprintf(mqttClientID,"clock-%lx",system_get_chip_id());
 	WifiAccessPoint.enable(false);
+
 	WifiStation.enable(true);
-	//WifiStation.config("xxxxxxxx","XXXXXXXXXX");
 	WifiStation.waitConnection(connectOK,60,connectFail);
-	ReadTemp.Init(TEMP_PIN);
-	ReadTemp.StartMeasure();
+
+	config = new Configurator();
 
 	Serial.println("Initialization completed.");
 

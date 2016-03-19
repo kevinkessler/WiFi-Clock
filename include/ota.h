@@ -15,6 +15,8 @@ extern Timer buttonTimer;
 extern Timer timeTimer;
 extern Timer pubTimer;
 
-extern KMKMqttClient mqtt;
+extern KMKMqttClient *mqtt;
+
+void startOtaUpdate(void);
 
 #endif /* INCLUDE_OTA_H_ */

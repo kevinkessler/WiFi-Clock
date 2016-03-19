@@ -10,11 +10,13 @@
 
 void mqttMessageRecv(String,String);
 
-#define TZ_TOPIC "pi-red/clock/tz"
-
+#define BASE_TOPIC "pi-red/clock/"
+#define TZ_TOPIC "tz"
+#define CLIENTS_TOPIC "pi-red/clients"
 extern NtpClient *ntpC;
 
 void showADC(int);
 void manualBright(int);
+double readTempData(void);
 
 #endif /* INCLUDE_MQTT_H_ */

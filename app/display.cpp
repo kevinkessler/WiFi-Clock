@@ -51,15 +51,17 @@ uint8_t pins[1]={PWM_GPIO};
 
 void ClockDisplay::setBrightness()
 {
-		uint32_t total=0;
-		uint8_t n;
-		uint16_t adc;
-		for(n=0;n<16;n++)
-		{
-			adc=system_adc_read();
-			total+=adc;
-		}
-		adc=total/16;
+	uint32_t total=0;
+	uint8_t n;
+	uint16_t adc;
+	for(n=0;n<16;n++)
+	{
+		adc=system_adc_read();
+		total+=adc;
+	}
+	adc=total/16;
+	totalADC+=adc;
+	countADC++;
 
 	if(setBright)
 	{
@@ -74,9 +76,17 @@ void ClockDisplay::setBrightness()
 			if(blink)
 				HWpwm->analogWrite(PWM_GPIO,0);
 
-			blink=!blink;
+		}
+		if(toggle)
+		{
+			if(blink)
+				displayTime();
+			else
+				showError(errCode);
 		}
 	}
+
+	blink=!blink;
 
 	if(displayADC)
 		displayNumber(adc);
@@ -128,6 +138,8 @@ void ClockDisplay::showADC(int dis)
 
 void ClockDisplay::showFlash()
 {
+	flash=true;
+
 	pushChar(H_CHAR,false);
 	pushChar(S_CHAR,false);
 	pushChar(L_CHAR,false);
@@ -135,7 +147,21 @@ void ClockDisplay::showFlash()
 
 	latchLED();
 }
+void ClockDisplay::showError(uint8 err)
+{
+	errCode=err;
+	if(errCode==1)
+		flash=true;
+	else
+		toggle=true;
 
+	pushChar(errCode,false);
+	pushChar(R_CHAR,false);
+	pushChar(R_CHAR,false);
+	pushChar(E_CHAR,false);
+
+	latchLED();
+}
 void ClockDisplay::displayNumber(uint16_t num)
 {
 	uint16_t val=num;
@@ -191,6 +217,19 @@ void ClockDisplay::displayTime()
 	latchLED();
 	debugf("Display %d:%d %d %d %d %d\n",dt.Hour,dt.Minute,hour_tens,hour_ones,min_tens,min_ones);
 
+}
+
+double ClockDisplay::adcAve()
+{
+	if(countADC!=0)
+	{
+		double retval=totalADC/countADC;
+		totalADC=0;
+		countADC=0;
+		return retval;
+	}
+	else
+		return 0.0;
 }
 
 void ClockDisplay::setDisplayLevel()

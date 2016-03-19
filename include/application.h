@@ -20,7 +20,6 @@
 void blink(void);
 void OtaUpdate(void);
 void updateTime(void);
-void readTempData(void);
 
 void checkOTA(void);
 void displayTime(void);

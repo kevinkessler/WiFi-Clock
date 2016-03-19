@@ -9,12 +9,15 @@
 #include <ota.h>
 #include <application.h>
 #include "display.h"
+#include "Configurator.h"
 
 bool otaInt = false;
 bool otaPress = false;
 uint8_t otaCount=0;
 rBootHttpUpdate* otaUpdater = 0;
+
 extern ClockDisplay led_display;
+extern Configurator *config;
 
 void IRAM_ATTR otaInterruptHandler()
 {
@@ -44,19 +47,23 @@ void checkOTA()
 
 	if(otaCount>60)
 	{
+		startOtaUpdate();
+		otaCount=0;
+	}
+}
+
+void startOtaUpdate()
+{
 		blinkTimer.initializeMs(100, blink).start();
 		led_display.showFlash();
-		mqtt.disconnect();
+		mqtt->disconnect();
 		timeTimer.stop();
 		pubTimer.stop();
 		buttonTimer.stop();
 
 		OtaUpdate();
-		otaCount=0;
-	}
+
 }
-
-
 void OtaUpdate_CallBack(bool result) {
 
 	Serial.println("In callback...");
@@ -91,7 +98,20 @@ void OtaUpdate() {
 	slot = bootconf.current_rom;
 	if (slot == 0) slot = 1; else slot = 0;
 
-	otaUpdater->addItem(bootconf.roms[slot], ROM_0_URL);
+	char buffer[50];
+	sprintf(buffer,"http://%s:%d/%s",config->getFirmwareServer(),config->getFirmwarePort(),ROM_0_URL);
+	debugf("Rom %s",buffer);
+
+	otaUpdater->addItem(bootconf.roms[slot], buffer);
+
+	sprintf(buffer,"http://%s:%d/%s",config->getFirmwareServer(),config->getFirmwarePort(),SPIFFS_URL);
+	debugf("Spiffs %s",buffer);
+
+    if (slot == 0) {
+        otaUpdater->addItem(RBOOT_SPIFFS_0, buffer);
+    } else {
+        otaUpdater->addItem(RBOOT_SPIFFS_1, buffer);
+    }
 
 	otaUpdater->setCallback(OtaUpdate_CallBack);
 
