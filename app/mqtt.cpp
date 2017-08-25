@@ -124,7 +124,7 @@ void kaPub()
 	}
 
 	mqtt_error_count=0;
-	disable_web_server();
+	//disable_web_server();
 	mqtt->publish(CLIENTS_TOPIC,mqttClientID);
 
 

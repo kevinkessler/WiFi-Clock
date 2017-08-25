@@ -32,11 +32,11 @@ void enable_web_server(uint8_t errCode)
 
 	led_display.showError(errCode);
 
-	if(!WifiStation.isConnected())
+/*	if(!WifiStation.isConnected())
 	{
 		WifiStation.config("","",false);
-		WifiStation.enable(true);
-	}
+//		WifiStation.enable(true);
+	}*/
 
 
 

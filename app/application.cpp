@@ -26,7 +26,7 @@ extern void enable_web_server(uint8);
 void updateTime()
 {
 
-	Serial.println(SystemClock.getSystemTimeString(eTZ_Local));
+	//debugf("%s",SystemClock.getSystemTimeString(eTZ_Local));
 	DateTime dt=SystemClock.now();
 
 
@@ -75,7 +75,7 @@ void init()
 {
 	Serial.begin(SERIAL_BAUD_RATE);
 	Serial.systemDebugOutput(true);
-	debugf("WiFi Clock Beginning Version 0.9");
+	debugf("WiFi Clock Beginning Version 1.0");
 
 	pinMode(OTA_BUTTON,INPUT);
 	attachInterrupt(OTA_BUTTON,otaInterruptHandler,CHANGE);
